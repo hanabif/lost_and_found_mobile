@@ -129,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           });
                         },
                         child: Text(
-                          isNotificationOn ? 'ONN' : 'OFF',
+                          isNotificationOn ? 'ON' : 'OFF',
                           style: TextStyle(
                             color: isNotificationOn ? Colors.blue : Colors.red,
                             fontWeight: FontWeight.bold,
