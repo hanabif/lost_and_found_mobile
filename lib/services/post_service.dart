@@ -1,31 +1,86 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/post_model.dart';
 
 class PostService {
-  // Simulated API calls with mock data
-  Future<List<Post>> getRecentPosts() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
+  static const String baseUrl =
+      'YOUR_API_BASE_URL'; // Replace with your actual API URL
 
-    return [
-      Post(
-        id: '1',
-        title: 'Macbook Air M2',
-        category: 'Electronics',
-        location: 'Mexico Square',
-        imageUrl: 'assets/images/Frame 18.png',
-        isLost: true,
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      Post(
-        id: '2',
-        title: 'Key with 3 rings',
-        category: 'Keys',
-        location: '4 Kilo',
-        imageUrl: 'assets/images/Frame 18 (1).png',
-        isLost: false,
-        createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      ),
-    ];
+  Future<List<Post>> getRecentPosts() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/posts/recent'));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Post.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load recent posts');
+      }
+    } catch (e) {
+      throw Exception('Error fetching recent posts: $e');
+    }
+  }
+
+  Future<Post> createPost({
+    required String category,
+    required String location,
+    required String itemName,
+    required String itemDetails,
+    String? specialMark,
+    required List<String> photos,
+    required bool isFound,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/posts'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'category': category,
+          'location': location,
+          'itemName': itemName,
+          'itemDetails': itemDetails,
+          'specialMark': specialMark,
+          'photos': photos,
+          'isFound': isFound,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        return Post.fromJson(json.decode(response.body));
+      } else {
+        throw Exception('Failed to create post');
+      }
+    } catch (e) {
+      throw Exception('Error creating post: $e');
+    }
+  }
+
+  Future<List<Post>> searchPosts({
+    String? category,
+    String? location,
+    String? query,
+  }) async {
+    try {
+      final queryParams = {
+        if (category != null) 'category': category,
+        if (location != null) 'location': location,
+        if (query != null) 'query': query,
+      };
+
+      final uri = Uri.parse(
+        '$baseUrl/posts/search',
+      ).replace(queryParameters: queryParams);
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Post.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to search posts');
+      }
+    } catch (e) {
+      throw Exception('Error searching posts: $e');
+    }
   }
 
   Future<List<String>> getCategories() async {

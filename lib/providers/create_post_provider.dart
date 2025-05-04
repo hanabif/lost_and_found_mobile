@@ -1,12 +1,28 @@
 import 'package:flutter/material.dart';
-import '../services/item_service.dart'; // Import service
+import '../services/post_service.dart';
 
-class CreatePostProvider extends ChangeNotifier {
+class CreatePostProvider with ChangeNotifier {
+  final PostService _postService = PostService();
+
   String _itemCategory = '';
   String _location = '';
   String _itemName = '';
   String _itemDetails = '';
   String _specialMark = '';
+  List<String> _photos = [];
+  bool _isSubmitting = false;
+  String? _error;
+
+  // Available categories
+  final List<String> _availableCategories = [
+    'Electronics',
+    'Documents',
+    'Jewelry',
+    'Clothing',
+    'Books',
+    'Bags',
+    'Others',
+  ];
 
   // Getters
   String get itemCategory => _itemCategory;
@@ -14,6 +30,10 @@ class CreatePostProvider extends ChangeNotifier {
   String get itemName => _itemName;
   String get itemDetails => _itemDetails;
   String get specialMark => _specialMark;
+  List<String> get photos => _photos;
+  List<String> get availableCategories => _availableCategories;
+  bool get isSubmitting => _isSubmitting;
+  String? get error => _error;
 
   // Setters
   void setItemCategory(String value) {
@@ -41,34 +61,69 @@ class CreatePostProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // New method to call the service
-  Future<void> submitPost() async {
-    try {
-      // Call the item service to create the post
-      await ItemService().createPost(
-        category: _itemCategory,
-        location: _location,
-        name: _itemName,
-        details: _itemDetails,
-        specialMark: _specialMark,
-      );
-
-      // Optionally clear the form after successful submission
-      clear();
-    } catch (e) {
-      // Handle error (e.g., show a snackbar)
-      print('Error submitting post: $e');
-      rethrow; // Re-throw to handle in UI layer if needed
+  void addPhoto(String photoPath) {
+    if (_photos.length < 6) {
+      _photos.add(photoPath);
+      notifyListeners();
     }
   }
 
-  // Optional: Clear all fields (for reset)
-  void clear() {
+  void removePhoto(int index) {
+    if (index >= 0 && index < _photos.length) {
+      _photos.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  Future<void> submitPost() async {
+    // Validate required fields
+    if (_itemCategory.isEmpty ||
+        _location.isEmpty ||
+        _itemName.isEmpty ||
+        _itemDetails.isEmpty) {
+      _error = 'Please fill in all required fields';
+      notifyListeners();
+      return;
+    }
+
+    _isSubmitting = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _postService.createPost(
+        category: _itemCategory,
+        location: _location,
+        itemName: _itemName,
+        itemDetails: _itemDetails,
+        specialMark: _specialMark,
+        photos: _photos,
+        isFound: true, // Since this is for found items
+      );
+
+      // Clear form after successful submission
+      _itemCategory = '';
+      _location = '';
+      _itemName = '';
+      _itemDetails = '';
+      _specialMark = '';
+      _photos = [];
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  void clearForm() {
     _itemCategory = '';
     _location = '';
     _itemName = '';
     _itemDetails = '';
     _specialMark = '';
+    _photos = [];
+    _error = null;
     notifyListeners();
   }
 }

@@ -27,7 +27,7 @@ class AppRoutes {
       case myClaims:
         return MaterialPageRoute(builder: (_) =>  MyClaimsScreen());
       case profile:
-        return MaterialPageRoute(builder: (_) => const ProfileScreen());
+        return MaterialPageRoute(builder: (_) => ProfileScreen());
       default:
         return MaterialPageRoute(
           builder:
