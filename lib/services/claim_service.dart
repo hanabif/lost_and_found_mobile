@@ -2,7 +2,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ClaimService {
-  final String baseUrl = 'http://your-nodejs-backend-url'; // Replace with your backend URL
+  final String baseUrl =
+      'http://your-nodejs-backend-url'; // Replace with your backend URL
 
   Future<void> submitClaim({
     required String fullname,
@@ -32,23 +33,20 @@ class ClaimService {
     }
   }
 
-  declineClaim(String claimId) {}
-
-  approveClaim(String claimId) {}
-
-  getClaimById(String claimId) {}
-}
-class ClaimService {
   Future<void> requestMoreInfo(String claimId, List<String> questions) async {
     // Implement your API call here
     throw UnimplementedError();
   }
 
-  getClaimById(String claimId) {}
+  Future<void> declineClaim(String claimId) async {
+    // Implement decline claim functionality
+  }
 
-  approveClaim(String claimId) {}
+  Future<void> approveClaim(String claimId) async {
+    // Implement approve claim functionality
+  }
 
-  declineClaim(String claimId) {}
-
-  submitClaim({required String fullname, required String mobileNumber, required String lostDate, required String lostLocation, required String attachedDetails, required String proofOfOwnership}) {}
+  Future<dynamic> getClaimById(String claimId) async {
+    // Implement get claim by ID functionality
+  }
 }

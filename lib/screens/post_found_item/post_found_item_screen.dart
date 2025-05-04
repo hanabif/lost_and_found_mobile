@@ -1,172 +1,57 @@
-// import 'dart:io';
-
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-
-// import '../../widgets/input_field.dart';
-// import '../../providers/create_post_provider.dart';
-
-
-
-// class CreatePostScreen extends StatefulWidget {
-// static const routeName = '/create-post';
-
-//   const CreatePostScreen({Key? key}) : super(key: key);
-
-//   @override
-//   _CreatePostScreenState createState() => _CreatePostScreenState();
-// }
-
-// class _CreatePostScreenState extends State<CreatePostScreen> {
-//   final _formKey = GlobalKey<FormState>();
-//   final TextEditingController _categoryController = TextEditingController();
-//   final TextEditingController _locationController = TextEditingController();
-//   final TextEditingController _nameController = TextEditingController();
-//   final TextEditingController _detailsController = TextEditingController();
-//   final TextEditingController _marksController = TextEditingController();
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return ChangeNotifierProvider(
-//       create: (_) => CreatePostProvider(),
-//       child: Consumer<CreatePostProvider>(
-//         builder: (context, provider, _) => Scaffold(
-//           appBar: AppBar(title: const Text('Create Post')),
-//           body: SingleChildScrollView(
-//             padding: const EdgeInsets.all(16),
-//             child: Form(
-//               key: _formKey,
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   InputField(
-//                     controller: _categoryController,
-//                     hintText: 'Item category',
-//                     prefixIcon: Icons.category,
-//                   ),
-//                   const SizedBox(height: 12),
-//                   InputField(
-//                     controller: _locationController,
-//                     hintText: 'Enter your location',
-//                     prefixIcon: Icons.location_on,
-//                   ),
-//                   const SizedBox(height: 12),
-//                   InputField(
-//                     controller: _nameController,
-//                     hintText: 'Item name',
-//                     prefixIcon: Icons.label,
-//                   ),
-//                   const SizedBox(height: 12),
-//                   TextFormField(
-//                     controller: _detailsController,
-//                     maxLines: 3,
-//                     maxLength: 200,
-//                     decoration: InputDecoration(
-//                       hintText: 'Item Details (200 chars max)',
-//                       border: OutlineInputBorder(
-//                         borderRadius: BorderRadius.circular(12),
-//                       ),
-//                     ),
-//                   ),
-//                   const SizedBox(height: 12),
-//                   InputField(
-//                     controller: _marksController,
-//                     hintText: 'Special Marks (optional)',
-//                     prefixIcon: Icons.star_border,
-//                   ),
-//                   const SizedBox(height: 20),
-//                   const Text('Upload photos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-//                   const SizedBox(height: 8),
-//                   // Grid of 6 photo pickers
-//                   GridView.builder(
-//                     shrinkWrap: true,
-//                     physics: const NeverScrollableScrollPhysics(),
-//                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-//                       crossAxisCount: 3,
-//                       mainAxisSpacing: 8,
-//                       crossAxisSpacing: 8,
-//                       childAspectRatio: 1,
-//                     ),
-//                     itemCount: provider.images.length,
-//                     itemBuilder: (context, i) {
-//                       final file = provider.images[i];
-//                       return GestureDetector(
-//                         onTap: () => provider.pickImage(i),
-//                         child: Container(
-//                           decoration: BoxDecoration(
-//                             borderRadius: BorderRadius.circular(12),
-//                             color: Colors.grey.shade200,
-//                           ),
-//                           child: file == null
-//                               ? const Icon(Icons.add_a_photo, size: 30, color: Colors.grey)
-//                               : Stack(
-//                                   fit: StackFit.expand,
-//                                   children: [
-//                                     Image.file(File(file.path), fit: BoxFit.cover),
-//                                     Positioned(
-//                                       top: 4,
-//                                       right: 4,
-//                                       child: GestureDetector(
-//                                         onTap: () => provider.removeImage(i),
-//                                         child: const Icon(Icons.cancel, color: Colors.redAccent),
-//                                       ),
-//                                     ),
-//                                   ],
-//                                 ),
-//                         ),
-//                       );
-//                     },
-//                   ),
-//                   const SizedBox(height: 24),
-//                   SizedBox(
-//                     width: double.infinity,
-//                     child: ElevatedButton(
-//                       onPressed: provider.isSubmitting
-//                           ? null
-//                           : () {
-//                               if (_formKey.currentState!.validate()) {
-//                                 provider.submitPost(
-//                                   category: _categoryController.text,
-//                                   location: _locationController.text,
-//                                   name: _nameController.text,
-//                                   details: _detailsController.text,
-//                                   specialMarks: _marksController.text,
-//                                 );
-//                               }
-//                             },
-//                       child: provider.isSubmitting
-//                           ? const SizedBox(
-//                               height: 20,
-//                               width: 20,
-//                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-//                             )
-//                           : const Text('Post now'),
-//                       style: ElevatedButton.styleFrom(
-//                         padding: const EdgeInsets.symmetric(vertical: 16),
-//                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
 import 'package:flutter/material.dart';
 import 'package:lost_and_found_mobile/providers/create_post_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class CreatePostScreen extends StatelessWidget {
   const CreatePostScreen({Key? key}) : super(key: key);
 
+  Future<void> _pickImage(BuildContext context, ImageSource source) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source);
+
+    if (pickedFile != null) {
+      if (!context.mounted) return;
+      context.read<CreatePostProvider>().addPhoto(pickedFile.path);
+    }
+  }
+
+  void _showImageSourceDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Select Image Source'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Camera'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(context, ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Gallery'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(context, ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-     final provider = Provider.of<CreatePostProvider>(context);
-    // Define the color used for the header and button
+    final provider = Provider.of<CreatePostProvider>(context);
+
     const Color primaryColor = Color(0xFF4F5BD5);
 
     return Scaffold(
@@ -177,10 +62,7 @@ class CreatePostScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Create Post',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Create Post', style: TextStyle(color: Colors.white)),
         centerTitle: false,
       ),
       body: SingleChildScrollView(
@@ -189,16 +71,44 @@ class CreatePostScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Item Category
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Item category',
-                prefixIcon: const Icon(Icons.category_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-              ),
-              onChanged: provider.setItemCategory,
+            Consumer<CreatePostProvider>(
+              builder: (context, provider, child) {
+                return DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    hintText: 'Select item category',
+                    prefixIcon: const Icon(Icons.category_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 12,
+                    ),
+                  ),
+                  value:
+                      provider.itemCategory.isEmpty
+                          ? null
+                          : provider.itemCategory,
+                  items:
+                      provider.availableCategories.map((String category) {
+                        return DropdownMenuItem<String>(
+                          value: category,
+                          child: Text(category),
+                        );
+                      }).toList(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      provider.setItemCategory(newValue);
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a category';
+                    }
+                    return null;
+                  },
+                );
+              },
             ),
             const SizedBox(height: 16),
             // Location
@@ -209,7 +119,10 @@ class CreatePostScreen extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 12,
+                ),
               ),
               onChanged: provider.setLocation,
             ),
@@ -221,7 +134,10 @@ class CreatePostScreen extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 12,
+                ),
               ),
               onChanged: provider.setItemName,
             ),
@@ -234,7 +150,10 @@ class CreatePostScreen extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 12,
+                ),
               ),
               onChanged: provider.setItemDetails,
             ),
@@ -246,7 +165,10 @@ class CreatePostScreen extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 12,
+                ),
               ),
               onChanged: provider.setSpecialMark,
             ),
@@ -257,26 +179,73 @@ class CreatePostScreen extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
-            // Photo Upload Grid (2 rows x 3 columns)
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 6,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1,
-              ),
-              itemBuilder: (context, index) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
+            // Photo Upload Grid
+            Consumer<CreatePostProvider>(
+              builder: (context, provider, child) {
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: provider.photos.length + 1,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1,
                   ),
-                  child: const Center(
-                    child: Icon(Icons.add, size: 32, color: Colors.grey),
-                  ),
+                  itemBuilder: (context, index) {
+                    if (index == provider.photos.length) {
+                      // Add photo button
+                      return GestureDetector(
+                        onTap: () => _showImageSourceDialog(context),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.add,
+                              size: 32,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    // Display selected photo
+                    return Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            File(provider.photos[index]),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                        ),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: GestureDetector(
+                            onTap: () => provider.removePhoto(index),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
             ),
@@ -292,24 +261,37 @@ class CreatePostScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () async {
-                  try {
-                    await provider.submitPost();
-                    // Show success message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Post created successfully!')),
-                    );
-                  } catch (e) {
-                    // Show error message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to create post: $e')),
-                    );
-                  }
-                },
-                child: const Text(
-                  'Post now',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
+                onPressed:
+                    provider.isSubmitting
+                        ? null
+                        : () async {
+                          try {
+                            await provider.submitPost();
+                            if (!context.mounted) return;
+                            // Show success message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Post created successfully!'),
+                              ),
+                            );
+                            Navigator.pop(context);
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            // Show error message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to create post: $e'),
+                              ),
+                            );
+                          }
+                        },
+                child:
+                    provider.isSubmitting
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                          'Post now',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
               ),
             ),
           ],
@@ -318,4 +300,3 @@ class CreatePostScreen extends StatelessWidget {
     );
   }
 }
-

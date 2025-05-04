@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 // Import providers
 import 'package:lost_and_found_mobile/providers/create_post_provider.dart';
 import 'package:lost_and_found_mobile/providers/claim_provider.dart';
+import 'package:lost_and_found_mobile/providers/home_provider.dart';
+import 'package:lost_and_found_mobile/providers/auth_provider.dart';
 
 // Import screens
 import 'package:lost_and_found_mobile/screens/post_found_item/post_found_item_screen.dart'; // CreatePostScreen
@@ -13,6 +15,7 @@ import 'package:lost_and_found_mobile/screens/verify_claim/request_info_screen.d
 import 'package:lost_and_found_mobile/screens/auth/signup_screen.dart';
 import 'package:lost_and_found_mobile/screens/auth/login_screen.dart';
 import 'package:lost_and_found_mobile/screens/auth/password_changed_screen.dart';
+import 'package:lost_and_found_mobile/screens/home/home_screen.dart';
 
 void main() {
   runApp(const LostNFoundApp());
@@ -25,6 +28,8 @@ class LostNFoundApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => CreatePostProvider()),
         ChangeNotifierProvider(create: (_) => ClaimProvider()),
         ChangeNotifierProvider(create: (_) => ClaimInfoProvider()),
@@ -50,12 +55,13 @@ class LostNFoundApp extends StatelessWidget {
         ),
         initialRoute: '/signup', // Start with signup for authentication flow
         routes: {
+          '/home': (context) => const HomeScreen(),
           '/create_post': (context) => const CreatePostScreen(),
           '/claim_item': (context) => const ClaimItemScreen(),
           '/claim_info': (context) => const ClaimInfoScreen(),
           '/request_more_info': (context) => const RequestMoreInfoScreen(),
-          '/signup': (context) => const SignUpScreen(),
-          '/login': (context) => const LoginScreen(),
+          '/signup': (context) => SignUpScreen(),
+          '/login': (context) => LoginScreen(),
           '/passwordChanged': (context) => const PasswordChangedScreen(),
         },
       ),
