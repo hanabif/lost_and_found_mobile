@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+import 'reset_password_screen.dart';
+
+void main() {
+  runApp(MaterialApp(
+    home: ForgotPasswordScreen(),
+    debugShowCheckedModeBanner: false,
+  ));
+}
+
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -12,8 +21,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   void sendCode() {
     final email = _emailController.text;
-    // You can add your sending logic here
     print('Send code to $email');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EmailVerificationScreen(email: email),
+      ),
+    );
   }
 
   @override
@@ -81,8 +96,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   child: const Text(
                     'Send Code',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold  ),
-                    
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -110,6 +127,125 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 16),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class EmailVerificationScreen extends StatefulWidget {
+  final String email;
+
+  const EmailVerificationScreen({Key? key, required this.email})
+      : super(key: key);
+
+  @override
+  State<EmailVerificationScreen> createState() =>
+      _EmailVerificationScreenState();
+}
+
+class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
+  final List<TextEditingController> _controllers =
+      List.generate(4, (index) => TextEditingController());
+
+  @override
+  void dispose() {
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            const SizedBox(height: 40),
+            const Text(
+              "Please check your email",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            RichText(
+              text: TextSpan(
+                style: const TextStyle(color: Colors.black),
+                children: [
+                  const TextSpan(text: "We've sent a code to "),
+                  TextSpan(
+                    text: widget.email,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(4, (index) {
+                return SizedBox(
+                  width: 50,
+                  child: TextField(
+                    controller: _controllers[index],
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 1,
+                    decoration: InputDecoration(
+                      counterText: '',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      if (value.length == 1 && index < 3) {
+                        FocusScope.of(context).nextFocus();
+                      }
+                    },
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                
+                String code = _controllers
+                    .map((controller) => controller.text)
+                    .join();
+                print("Entered code: $code");
+                // Add verification logic here
+                 Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ResetPasswordScreen()),
+    );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4D5DFB),
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text("Verify"),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Send code again  00:20",
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
         ),
       ),
     );
