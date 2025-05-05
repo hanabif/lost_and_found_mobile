@@ -39,13 +39,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.signIn(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
-
-    if (success && mounted) {
+    // Temporarily bypass authentication
+    if (mounted) {
       Navigator.pushReplacementNamed(context, '/home');
     }
   }

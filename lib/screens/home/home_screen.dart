@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../widgets/lost_found_card.dart';
 import '../../providers/home_provider.dart';
 import '../../models/post_model.dart';
+import '../../models/filter_model.dart';
 import 'filter_modal.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,123 +20,45 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Load data when the screen is first created
     Future.microtask(() => context.read<HomeProvider>().loadData());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lost & Found'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                builder: (context) => const FilterModal(),
-              );
-            },
-          ),
-        ],
-      ),
       backgroundColor: Colors.white,
-      body: Consumer<HomeProvider>(
-        builder: (context, provider, child) {
-          final filteredPosts = provider.filteredPosts;
-
-          if (filteredPosts.isEmpty) {
-            return const Center(child: Text('No posts found'));
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: filteredPosts.length,
-            itemBuilder: (context, index) {
-              final post = filteredPosts[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (post.photos.isNotEmpty)
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(8),
-                        ),
-                        child: Image.network(
-                          post.photos.first,
-                          height: 200,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            post.itemName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            post.itemDetails,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(Icons.category_outlined, size: 16),
-                              const SizedBox(width: 4),
-                              Text(
-                                post.category,
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                              const SizedBox(width: 16),
-                              const Icon(Icons.location_on_outlined, size: 16),
-                              const SizedBox(width: 4),
-                              Text(
-                                post.location,
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(Icons.access_time, size: 16),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Posted ${provider.getTimeAgo(post.createdAt)}',
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+      body: SafeArea(
+        child: Column(
+          children: [
+            const _MainHeader(userName: 'John Doe', location: 'New York'),
+            const _SearchBarSection(),
+            const SizedBox(height: 16),
+            const _CategoryGridSection(
+              categories: [
+                'Electronics',
+                'Documents',
+                'Clothing',
+                'Accessories',
+                'Others',
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: Consumer<HomeProvider>(
+                builder: (context, provider, child) {
+                  final posts = provider.filteredPosts;
+                  return _RecentPostsSection(posts: posts);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// 👤 Main header widget (kept private to this file)
+// 👤 Main header widget
 class _MainHeader extends StatelessWidget {
   final String userName;
   final String location;
@@ -220,26 +143,62 @@ class _SearchBarSection extends StatelessWidget {
           children: [
             Icon(Icons.search, color: HomeScreen.primaryColor, size: 24),
             const SizedBox(width: 8),
-            const Expanded(
+            Expanded(
               child: TextField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Search your lost items',
                   border: InputBorder.none,
                 ),
+                onChanged: (value) {
+                  context.read<HomeProvider>().setSearchQuery(value);
+                },
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.filter_list, color: Colors.black),
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(24),
+            Consumer<HomeProvider>(
+              builder: (context, provider, child) {
+                final hasActiveFilters =
+                    provider.currentFilter.category != null ||
+                    provider.currentFilter.location != null ||
+                    provider.currentFilter.timeFilter != TimeFilter.all ||
+                    provider.currentFilter.maxDistance != null;
+
+                return Stack(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.filter_list,
+                        color:
+                            hasActiveFilters
+                                ? HomeScreen.primaryColor
+                                : Colors.black,
+                      ),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(24),
+                            ),
+                          ),
+                          builder: (context) => const FilterModal(),
+                        );
+                      },
                     ),
-                  ),
-                  builder: (context) => const FilterModal(),
+                    if (hasActiveFilters)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: HomeScreen.primaryColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
                 );
               },
             ),
@@ -335,16 +294,14 @@ class _RecentPostsSection extends StatelessWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            height: 190,
+          Expanded(
             child: ListView.builder(
-              scrollDirection: Axis.horizontal,
               itemCount: posts.length,
               itemBuilder: (context, index) {
                 final post = posts[index];
                 return Padding(
                   padding: EdgeInsets.only(
-                    right: index < posts.length - 1 ? 12 : 0,
+                    bottom: index < posts.length - 1 ? 12 : 0,
                   ),
                   child: LostFoundCard(
                     imageUrl: post.photos.isNotEmpty ? post.photos.first : '',
