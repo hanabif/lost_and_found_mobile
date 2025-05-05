@@ -447,7 +447,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         title: const Text(
-          'Mikim Bet',
+          'Millium Bengit',
           style: TextStyle(color: Colors.white),
         ),
         actions: [
