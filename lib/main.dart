@@ -17,9 +17,11 @@ import 'package:lost_and_found_mobile/screens/auth/login_screen.dart';
 import 'package:lost_and_found_mobile/screens/auth/password_changed_screen.dart';
 import 'package:lost_and_found_mobile/screens/home/home_screen.dart';
 
+
 void main() {
   runApp(const LostNFoundApp());
 }
+
 
 class LostNFoundApp extends StatelessWidget {
   const LostNFoundApp({super.key});
